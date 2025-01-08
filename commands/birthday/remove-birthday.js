@@ -1,16 +1,12 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { getDb } = require("../db/db");
+const { getDb } = require("../../db/db");
 const { MessageFlags } = require("discord.js");
+const {
+  removeBirthday,
+  checkForBirthdayEntry,
+} = require("../../command-utils/birthdayUtils");
 
 const COLLECTION = "birthdays";
-
-async function checkForEntry(collection, username) {
-  return await collection.findOne({ username });
-}
-
-async function removeBirthday(collection, username) {
-  return await collection.deleteOne({ username: username });
-}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -24,7 +20,7 @@ module.exports = {
     const db = getDb();
     const collection = db.collection(COLLECTION);
     try {
-      if (await checkForEntry(collection, username)) {
+      if (await checkForBirthdayEntry(collection, username)) {
         await removeBirthday(collection, username);
         await interaction.reply({
           content: "I removed your birthday from my database 👍",

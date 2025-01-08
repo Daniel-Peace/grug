@@ -5,18 +5,30 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-// Read all command files
+// Function to recursively load command files
+const loadCommands = (directoryPath) => {
+  const commandData = [];
+
+  const files = fs.readdirSync(directoryPath);
+
+  for (const file of files) {
+    const filePath = path.join(directoryPath, file);
+
+    if (fs.lstatSync(filePath).isDirectory()) {
+      // If it's a directory, recurse into it
+      commandData.push(...loadCommands(filePath)); // Merge the results of subdirectory
+    } else if (file.endsWith(".js")) {
+      // If it's a JavaScript file, require it as a command
+      const command = require(filePath);
+      commandData.push(command.data.toJSON()); // Register the command data
+    }
+  }
+
+  return commandData;
+};
+
 const commandsPath = path.join(__dirname, "commands");
-const commandFiles = fs
-  .readdirSync(commandsPath)
-  .filter((file) => file.endsWith(".js"));
-
-const commands = [];
-
-for (const file of commandFiles) {
-  const command = require(path.join(commandsPath, file));
-  commands.push(command.data.toJSON()); // Register the command data
-}
+const commands = loadCommands(commandsPath);
 
 const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID; // For testing, use guild commands

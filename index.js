@@ -31,14 +31,25 @@ const client = new Client({
 client.commands = new Map();
 
 const commandsPath = path.join(__dirname, "commands");
-const commandFiles = fs
-  .readdirSync(commandsPath)
-  .filter((file) => file.endsWith(".js"));
 
-for (const file of commandFiles) {
-  const command = require(path.join(commandsPath, file));
-  client.commands.set(command.data.name, command);
-}
+const loadCommands = (directoryPath) => {
+  const files = fs.readdirSync(directoryPath);
+
+  for (const file of files) {
+    const filePath = path.join(directoryPath, file);
+
+    if (fs.lstatSync(filePath).isDirectory()) {
+      // If it's a directory, recurse into it
+      loadCommands(filePath);
+    } else if (file.endsWith(".js")) {
+      // If it's a JavaScript file, require it as a command
+      const command = require(filePath);
+      client.commands.set(command.data.name, command);
+    }
+  }
+};
+
+loadCommands(commandsPath);
 
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
