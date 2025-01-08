@@ -1,27 +1,14 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { getDb } = require("../db/db");
+const { getDb } = require("../../db/db");
 const { MessageFlags } = require("discord.js");
+const {
+  addBirthday,
+  updateBirthday,
+  isValidBirthday,
+  checkForBirthdayEntry,
+} = require("../../command-utils/birthdayUtils");
 
 const COLLECTION = "birthdays";
-
-function validateBirthday(day, month) {
-  return month >= 1 && month <= 12 && day >= 1 && day <= 31;
-}
-
-async function checkForEntry(collection, username) {
-  return await collection.findOne({ username });
-}
-
-async function updateBirthday(collection, doc, day, month) {
-  const filter = { _id: doc._id };
-  const update = { $set: { day, month } };
-  return await collection.updateOne(filter, update);
-}
-
-async function saveBirthday(collection, username, day, month) {
-  const doc = { username, day, month };
-  return await collection.insertOne(doc);
-}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -47,7 +34,7 @@ module.exports = {
     const day = interaction.options.getInteger("day");
     const month = interaction.options.getInteger("month");
 
-    if (!validateBirthday(day, month)) {
+    if (!isValidBirthday(day, month)) {
       await interaction.reply({
         content: "It doesn't look like that is a valid date 🥺",
         flags: [MessageFlags.Ephemeral],
@@ -56,18 +43,20 @@ module.exports = {
     }
 
     try {
-      const doc = await checkForEntry(collection, username);
+      const doc = await checkForBirthdayEntry(collection, username);
 
       if (doc) {
+        // Update the birthday if it exists
         await updateBirthday(collection, doc, day, month);
         await interaction.reply({
-          content: `I updated your birthday to ${month}/${day}.`,
+          content: `I updated your birthday to ${month}/${day}. 🎉`,
           flags: [MessageFlags.Ephemeral],
         });
       } else {
-        await saveBirthday(collection, username, day, month);
+        // Add a new birthday if it doesn't exist
+        await addBirthday(collection, username, day, month);
         await interaction.reply({
-          content: `It doesn't look like you have a birthday saved. I'll add ${month}/${day} to my database.`,
+          content: `It looks like you didn't have a birthday saved. I'll add ${month}/${day} to my database now. 🎂`,
           flags: [MessageFlags.Ephemeral],
         });
       }
