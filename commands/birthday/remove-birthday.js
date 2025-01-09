@@ -6,8 +6,6 @@ const {
   checkForBirthdayEntry,
 } = require("../../command-utils/birthdayUtils");
 
-const COLLECTION = "birthdays";
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("remove-birthday")
@@ -17,11 +15,9 @@ module.exports = {
 
   async execute(interaction) {
     const username = interaction.user.username;
-    const db = getDb();
-    const collection = db.collection(COLLECTION);
     try {
-      if (await checkForBirthdayEntry(collection, username)) {
-        await removeBirthday(collection, username);
+      if (await checkForBirthdayEntry(username)) {
+        await removeBirthday(username);
         await interaction.reply({
           content: "I removed your birthday from my database 👍",
           flags: [MessageFlags.Ephemeral],

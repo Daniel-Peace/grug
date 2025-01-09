@@ -1,22 +1,9 @@
 const { Client, GatewayIntentBits } = require("discord.js");
 const { connectToDatabase, getDb } = require("./db/db"); // Make sure to require the correct path
+const { wishHappyBirthday } = require("./command-utils/birthdayUtils");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
-
-async function handleBirthdays(collection) {
-  const today = new Date();
-  const currentDay = today.getDate();
-  const currentMonth = today.getMonth() + 1;
-  const users = await collection
-    .find({ day: currentDay, month: currentMonth })
-    .toArray();
-
-  users.forEach((user) => {
-    console.log(`Happy birthday ${user.username}!`);
-    // Add Discord messaging or other actions here if needed
-  });
-}
 
 const COLLECTION = "birthdays";
 
@@ -53,6 +40,8 @@ loadCommands(commandsPath);
 
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
+
+  console.log(client.guilds.cache);
   try {
     await connectToDatabase(); // Ensure DB connection is made
   } catch (error) {
@@ -65,7 +54,7 @@ client.once("ready", async () => {
   const collection = db.collection(COLLECTION);
 
   // Schedule the daily birthday check
-  scheduleDailyTask(handleBirthdays, collection, 13, 7); // Runs at 8:00 AM every day
+  scheduleDailyTask(wishHappyBirthday, client, collection, 21, 55); // Runs at 8:00 AM every day
 });
 
 // Listen for interactions (slash commands)
@@ -89,7 +78,8 @@ client.on("interactionCreate", async (interaction) => {
 
 // Schedules a task to run at a specific time daily
 const scheduleDailyTask = (
-  handleBirthdays,
+  wishHappyBirthday,
+  client,
   collection,
   hour = 8,
   minute = 0,
@@ -106,8 +96,12 @@ const scheduleDailyTask = (
 
   // Schedule the first run
   setTimeout(() => {
-    handleBirthdays(collection); // Corrected callback to call the handleBirthdays function
-    setInterval(() => handleBirthdays(collection), 24 * 60 * 60 * 1000); // Schedule to run every 24 hours
+    if (!client) {
+      console.log("Client is not available for scheduling.");
+      return;
+    }
+    wishHappyBirthday(client); // Corrected callback to call the handleBirthdays function
+    setInterval(() => wishHappyBirthday(client), 24 * 60 * 60 * 1000); // Schedule to run every 24 hours
   }, timeUntilNextRun);
 };
 
