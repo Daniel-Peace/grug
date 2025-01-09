@@ -8,8 +8,6 @@ const {
   checkForBirthdayEntry,
 } = require("../../command-utils/birthdayUtils");
 
-const COLLECTION = "birthdays";
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("update-birthday")
@@ -28,9 +26,6 @@ module.exports = {
 
   async execute(interaction) {
     const username = interaction.user.username;
-    const db = getDb();
-    const collection = db.collection(COLLECTION);
-
     const day = interaction.options.getInteger("day");
     const month = interaction.options.getInteger("month");
 
@@ -43,18 +38,18 @@ module.exports = {
     }
 
     try {
-      const doc = await checkForBirthdayEntry(collection, username);
+      const doc = await checkForBirthdayEntry(username);
 
       if (doc) {
         // Update the birthday if it exists
-        await updateBirthday(collection, doc, day, month);
+        await updateBirthday(doc, day, month);
         await interaction.reply({
           content: `I updated your birthday to ${month}/${day}. 🎉`,
           flags: [MessageFlags.Ephemeral],
         });
       } else {
         // Add a new birthday if it doesn't exist
-        await addBirthday(collection, username, day, month);
+        await addBirthday(username, day, month);
         await interaction.reply({
           content: `It looks like you didn't have a birthday saved. I'll add ${month}/${day} to my database now. 🎂`,
           flags: [MessageFlags.Ephemeral],

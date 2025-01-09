@@ -8,10 +8,6 @@ const {
   checkForBirthdayEntry,
 } = require("../../command-utils/birthdayUtils");
 
-// constants
-const COLLECTION = "birthdays";
-
-// command
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("add-birthday")
@@ -30,11 +26,8 @@ module.exports = {
 
   async execute(interaction) {
     const username = interaction.user.username;
-    const db = getDb();
-    const collection = db.collection(COLLECTION);
-
     try {
-      if (await checkForBirthdayEntry(collection, username)) {
+      if (await checkForBirthdayEntry(username)) {
         await interaction.reply({
           content: "You already gave me your birthday 👍",
           flags: [MessageFlags.Ephemeral],
@@ -44,7 +37,7 @@ module.exports = {
         const month = interaction.options.getInteger("month");
 
         if (isValidBirthday(day, month)) {
-          await addBirthday(collection, username, day, month);
+          await addBirthday(username, day, month);
           await interaction.reply({
             content: `You entered your birthday as ${month}/${day}. I will remember this and wish you a happy birthday when the time comes 🥳`,
             flags: [MessageFlags.Ephemeral],

@@ -2,6 +2,9 @@
 const { MongoClient } = require("mongodb");
 require("dotenv").config();
 
+const CONFIG_COLLECTION = "configs";
+const USERS_COLLECTION = "users";
+
 const MONGO_URI = process.env.MONGO_URI;
 let db;
 
@@ -20,4 +23,17 @@ function getDb() {
   return db;
 }
 
-module.exports = { connectToDatabase, getDb };
+async function getConfigCollection() {
+  return await db.collection(CONFIG_COLLECTION);
+}
+
+async function getUsersCollection() {
+  return await db.collection(USERS_COLLECTION);
+}
+
+module.exports = {
+  connectToDatabase,
+  getDb,
+  getConfigCollection,
+  getUsersCollection,
+};
